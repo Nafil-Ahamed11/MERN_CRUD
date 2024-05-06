@@ -4,6 +4,7 @@ import EmployeeTable from "./Table/EmployeeTable";
 import AddEmployee from "./components/AddUser";
 import AdminLogin from "./components/AdminLogin";
 import Home from "./components/Home";
+import EditUser from "./components/EditUser";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/list-employee" element={<EmployeeTable />} /> {/* Use element prop instead of component */}
         <Route path="/" element={<AdminLogin />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/edit/:userId" element={<EditUser />} />
 
 
       </Routes>

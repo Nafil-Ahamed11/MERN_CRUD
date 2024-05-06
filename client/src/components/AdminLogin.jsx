@@ -11,7 +11,7 @@ function AdminLogin() {
         try {
             const response = await axios.post('http://localhost:4000/admin-login', { username, password });
             if (response.data.success) {
-                // Login successful, redirect to employee list page
+                localStorage.setItem('isAdminLoggedIn', true);
                 window.location.href = '/home';
             } else {
                 setError(response.data.message);
@@ -25,8 +25,12 @@ function AdminLogin() {
     return (
         
         <div className="d-flex justify-content-center align-items-center vh-100">
-            <div>
+            <div className='p-3'>
+                <div className='mb-4 '>
+                    <h1 className='text-center fw-bold '>Admin Login</h1>
+                </div>
                 <div data-mdb-input-init className="form-outline mb-4">
+                <label className="form-label" htmlFor="username">Username</label>
                     <input
                         type="text"
                         id="username"
@@ -36,9 +40,10 @@ function AdminLogin() {
                         required
                         className="form-control"
                     />
-                    <label className="form-label" htmlFor="username">Username</label>
+                   
                 </div>
                 <div data-mdb-input-init className="form-outline mb-4">
+                <label className="form-label" htmlFor="password">Password</label>
                     <input
                         type="password"
                         id="password"
@@ -48,7 +53,7 @@ function AdminLogin() {
                         required
                         className="form-control"
                     />
-                    <label className="form-label" htmlFor="password">Password</label>
+                    
                 </div>
                 {error && <div className="alert alert-danger" role="alert">{error}</div>}
                 <button

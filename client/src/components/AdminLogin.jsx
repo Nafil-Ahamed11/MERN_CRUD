@@ -1,10 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect} from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+
 
 function AdminLogin() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const navigate = useNavigate();
+
+    
+    useEffect(() => {
+        const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn');
+        if (isAdminLoggedIn) {
+            navigate('/home');
+        }
+    }, [navigate]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setErrorMessage('');
+        }, 3000); 
+
+        return () => clearTimeout(timer);
+    }, [error]);
+
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -18,7 +38,10 @@ function AdminLogin() {
             }
         } catch (error) {
             console.error(error);
-            setError('An error occurred');
+            setError('Invalid login details');
+            setTimeout(() => {
+                setError('');
+            }, 2000); 
         }
     };
 

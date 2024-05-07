@@ -8,9 +8,9 @@ function Home() {
     useEffect(() => {
         const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn');
         if (!isAdminLoggedIn) {
-            navigate('/');
+            navigate('/'); 
         }
-    }, []);
+    }, [navigate]);
 
     return (
         <div className="text-white text-center h-100">

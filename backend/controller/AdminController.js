@@ -2,72 +2,56 @@ import { Console } from "console";
 import UserModels from "../models/User.js";
 import path from "path"
 
-
-
 const adminLogin = (req, res) => {
+  try {
   console.log("entering admin logi n ")
   const { username, password } = req.body;
   console.log("username",username);
   console.log("password",password);
   if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
       
-    req.session.isAdminLoggedIn = true;
-
       res.status(200).json({ success: true, message: 'Login successful' });
   } else {
       res.status(401).json({ success: false, message: 'Invalid login details' });
   }
-};
-
-const adminLogout = async (req, res) => {
-  try {
-    console.log("enterd admin Logout")
-    req.session.destroy((err) => {
-      if (err) {
-          console.log(err);
-          res.status(500).json({ success: false, message: 'Logout failed' });
-      } else {
-          res.clearCookie('sid'); // Clear the session cookie
-          res.status(200).json({ success: true, message: 'Logout successful' });
-      }
-  });
-  
   } catch (error) {
-      console.log(error);
-      res.status(500).json({ success: false, message: 'Internal server error' });
+    console.log(error)
   }
 };
+
 
 const createEmployee = async (req, res) => { 
   try {
     console.log("Entered the createEmployee");
     const { name, email, mobileNo, designation, gender, course } = req.body;
 
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Image file is required' });
+    }
     const img = req.file.filename;
     console.log("name", name);
     console.log("email", email);
     console.log("mobileNo", mobileNo);
     console.log("img",img);
 
-    
-    // Validation: Check if all fields are provided
+
     if (!name || !email || !mobileNo || !designation || !gender || !course || !img) {
       return res.status(400).json({ success: false, message: 'All fields are required' });
     }
 
-    // Validation: Validate email format
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ success: false, message: 'Invalid email format' });
     }
 
-    // Validation: Check if mobileNo contains only numeric characters
+
     const numericRegex = /^[0-9]+$/;
     if (!numericRegex.test(mobileNo)) {
       return res.status(400).json({ success: false, message: 'Mobile number should contain only numeric characters' });
     }
 
-    // Validation: Check if file type is jpg or png
     if (!img.match(/\.(jpg|jpeg|png)$/)) {
       return res.status(400).json({ success: false, message: 'Only JPG or PNG files are allowed' });
     }
@@ -95,7 +79,6 @@ const createEmployee = async (req, res) => {
 
     console.log("newUser", newUser);
 
-    // Save the user to the database
     const savedUser = await newUser.save();
     res.status(200).json({ success: true, message: 'User Created successfully', savedUser });
   } catch (error) {
@@ -107,11 +90,12 @@ const createEmployee = async (req, res) => {
 const getEmployee = async (req,res) =>{
     try {
         const employee = await UserModels.find()
+        const count = employee.length;
         if(!employee){
             return res.status(404).json({message:false, message: 'user not found'})
         }
 
-        res.status(200).json({success:true , employee})
+        res.status(200).json({success:true ,count,employee})
     } catch (error) {
         console.log(error.message);
     }
@@ -160,12 +144,20 @@ const updateUser = async (req, res) => {
   try {
       const { name, email, mobileNo, designation, gender, course } = req.body;
 
-      // Assuming you have a UserModel imported
-      const userId = req.params.userId; // Assuming you have userId available in the route params
-      const img = req.file.path.replace('public', '');
+      const userId = req.params.userId; 
 
-      // Update the user details in the database
-      const updatedUser = await UserModels.findByIdAndUpdate(userId, {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ success: false, message: 'Invalid email format' });
+    }
+
+    const numericRegex = /^[0-9]+$/;
+    if (!numericRegex.test(mobileNo)) {
+      return res.status(400).json({ success: false, message: 'Mobile number should contain only numeric characters' });
+    }
+      if(req.file){
+        const img = req.file.filename;
+        const updatedUser = await UserModels.findByIdAndUpdate(userId, {
           name,
           email,
           mobileNo,
@@ -173,13 +165,30 @@ const updateUser = async (req, res) => {
           gender,
           course,
           img
-      }, { new: true }); // Set { new: true } to return the updated document
-          console.log("updated user",updatedUser)
+      }, { new: true }); 
+
       if (updatedUser) {
           res.status(200).json({ success: true, message: 'User updated successfully', user: updatedUser });
       } else {
           res.status(404).json({ success: false, message: 'User not found' });
       }
+      } else {
+        const updatedUser = await UserModels.findByIdAndUpdate(userId, {
+          name,
+          email,
+          mobileNo,
+          designation,
+          gender,
+          course,
+      }, { new: true }); 
+
+      if (updatedUser) {
+          res.status(200).json({ success: true, message: 'User updated successfully', user: updatedUser });
+      } else {
+          res.status(404).json({ success: false, message: 'User not found' });
+      }
+      }
+
   } catch (error) {
       console.error('Error updating user:', error);
       res.status(500).json({ success: false, message: 'An error occurred while updating the user' });
@@ -188,6 +197,38 @@ const updateUser = async (req, res) => {
 
 
 
+const search = async (req, res) => {
+  try {
+    console.log("entering in side of the search functioanlity")
+    const { key, limit } = req.query;
+    const regex = new RegExp(key, 'i'); 
+
+
+    const users = await UserModels.find({
+      $or: [{ name: regex }, { email: regex }]
+    }).limit(parseInt(limit) || 10); 
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+const fetchAdmin = async (req, res) => {
+  try {
+      const userName = await process.env.ADMIN_USERNAME;
+      if (!userName) {
+          return res.status(404).json({ success: false, message: 'Admin not found' });
+      }
+      console.log("username" ,userName);
+      res.status(200).json({ success: true, userName });
+  } catch (error) {
+      console.error(error.message);
+      res.status(500).json({ success: false, message: 'An error occurred while fetching admin data' });
+  }
+};
 
 export {
 createEmployee,
@@ -196,7 +237,8 @@ adminLogin,
 Delete,
 edit,
 updateUser,
-adminLogout
+search,
+fetchAdmin
 }
 
 

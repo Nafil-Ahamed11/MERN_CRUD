@@ -1,8 +1,7 @@
 import express from "express";
-import { adminLogin, createEmployee, getEmployee, Delete, edit, updateUser, adminLogout } from "../controller/userController.js";
+import { adminLogin, createEmployee, getEmployee, Delete, edit, updateUser,search,fetchAdmin } from "../controller/AdminController.js";
 const router = express.Router();
 import uploadMiddleware from "../middlewares/multerMiddleware.js";
-import { isAdminLoggedIn } from "../middlewares/authAdmin.js";
 
 router.get('/', (req, res) => {
     console.log("entered inside of route");
@@ -10,11 +9,12 @@ router.get('/', (req, res) => {
 });
 
 router.post('/admin-login', adminLogin);
-router.post('/create', isAdminLoggedIn, uploadMiddleware.single('img'), createEmployee);
+router.post('/create',  uploadMiddleware.single('img'), createEmployee);
 router.post('/delete/:userId', Delete);
-router.post('/edit/:userId', isAdminLoggedIn, edit);
-router.post('/update/:userId', isAdminLoggedIn, uploadMiddleware.single('img'), updateUser);
-router.get('/admin-logout', isAdminLoggedIn, adminLogout);
+router.post('/edit/:userId', edit);
+router.post('/update/:userId',  uploadMiddleware.single('img'), updateUser);
 router.get('/get', getEmployee);
+router.get('/get-search',search);
+router.get('/fetch-admin',fetchAdmin);
 
 export default router;
